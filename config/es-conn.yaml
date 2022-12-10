@@ -1,0 +1,5 @@
+local:
+  port: 9200
+  schema: "http"
+  hosts:
+    - "localhost"
