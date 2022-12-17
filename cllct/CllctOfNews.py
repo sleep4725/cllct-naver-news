@@ -20,7 +20,7 @@ except ImportError as err:
     print(err)
     
 '''
-네이버 뉴스 경제
+네이버 뉴스
 -------------------------
 @author JunHyeon.Kim 
 @date 20221208
@@ -50,6 +50,7 @@ class CllctOfNews(CommonURL):
                         f"&date={self._cllct_time}" +\
                         f"&page={page}"
 
+        print(f"req_url: {req_url}")
         
         response :requests.models.Response = requests.get(req_url, headers= self._headers)
         if response.status_code == 200:
