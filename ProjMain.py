@@ -83,8 +83,8 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver)\
     :param:
     :return:
     '''
-    element :dict = {"req_url": u}
-    chrome_driver.get(u)
+    element :dict = {"req_url": u["url"]}
+    chrome_driver.get(u["url"])
     chrome_driver.implicitly_wait(3)
     bs_obj = BeautifulSoup(chrome_driver.page_source, "html.parser")
     
@@ -101,6 +101,11 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver)\
     element["news-source"] = news_source_v    
     element["news-title"] = news_title_v
     element["news-body"] = news_body_v
+    element["news-sid1_num"] = u["sid1"]
+    element["news-sid1_hangl_cate"] = u["sid1_hangl_cate"]
+    element["news-sid2_num"] = u["sid2"]
+    element["news-sid2_hangl_cate"] = u["sid2_hangl_cate"]
+    element["news-cllct_detail_time"] = u["detail_cllct_time"]
     
     chrome_driver.quit()
      
@@ -114,9 +119,11 @@ if __name__ == "__main__":
     
     sid2 :dict[str, int] = o._obj._sid2
     for k, v in sid2.items():
-        for page in range(1, 3):
-            url:list[str] = o.get_url_list(sid2=v, page=page)
-            print(url)
+        for page in range(1, 2):
+            url:list[dict] = o.get_url_list(
+                sid2=v, 
+                page=page, 
+                sid2_hangl_cate=k)
             
             with ThreadPoolExecutor(5) as executor:
                 results = [

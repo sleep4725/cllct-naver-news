@@ -31,12 +31,14 @@ class CllctOfNews(CommonURL):
         CommonURL.__init__(self)
         self._obj: news_category_object = news_category_object()
         self._cllct_time: str = TimeUtil.get_cllct_time()
-             
-    def get_url_list(self, sid2: int, page: int)\
-        -> list[str]:
+        self._detail_cllct_time: str = TimeUtil.get_detail_cllct_time()
+        
+    def get_url_list(self, sid2: int, page: int, sid2_hangl_cate: str)\
+        -> list[dict]:
         '''
         :param sid2:
         :param page:
+        :param sid2_hangl_cate: 
         :return:
         '''
         url_list: list[str] = []
@@ -62,7 +64,16 @@ class CllctOfNews(CommonURL):
                 li_tag :bs4.element.Tag = li_tag
                 a_tag :bs4.element.Tag = li_tag.select_one("dl > dt > a")
                 href_url :str = a_tag.attrs["href"]
-                url_list.append(href_url)
+                url_list.append(
+                    {
+                        "url": href_url, 
+                        "sid1": self._obj._sid1,
+                        "sid1_hangl_cate": self._obj._sid1_hangl_cate,
+                        "sid2": sid2, 
+                        "sid2_hangl_cate": sid2_hangl_cate,
+                        "detail_cllct_time": self._detail_cllct_time
+                    }
+                )
             
             return url_list
         

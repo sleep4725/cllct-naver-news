@@ -13,3 +13,11 @@ class TimeUtil:
         :return:
         '''
         return time.strftime("%Y%m%d", time.localtime())
+    
+    @classmethod 
+    def get_detail_cllct_time(cls)-> str:
+        '''
+        :param:
+        :return:
+        '''
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
