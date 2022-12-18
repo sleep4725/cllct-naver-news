@@ -1,5 +1,6 @@
 try:
     
+    import sys 
     import re 
     import requests
     import unicodedata    
@@ -21,6 +22,7 @@ try:
     from es.EsOption import EsOption
     from cllct.CllctOfNews import CllctOfNews
     from model.eco.ModelOfEco import ModelOfEco
+    from model.pol.ModelOfPol import ModelOfPol
     from common.CommonURL import CommonURL
 except ImportError as error:
     print(error)
@@ -130,8 +132,19 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver, url_header: di
 
 if __name__ == "__main__":
 
+    argument = sys.argv
+    
+    if len(argument) != 2: exit(1)
+    
     common_url = CommonURL()
-    o = CllctOfNews(news_category_object= ModelOfEco) 
+    news_category_obj = None 
+    if argument[1] not in ["ModelOfEco", "ModelOfPol"]:
+        print("ModelOfEco, ModelOfPol")
+        exit(1)
+    if argument[1] == "ModelOfEco": news_category_obj = ModelOfEco
+    elif argument[1] == "ModelOfPol": news_category_obj = ModelOfPol
+     
+    o = CllctOfNews(news_category_object= news_category_obj) 
     es_client_obj = EsOption()
     chrome_driver_object = ChromeDriver() 
     driver :WebDriver = chrome_driver_object.get_chrome_driver()
