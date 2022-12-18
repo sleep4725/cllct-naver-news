@@ -1,0 +1,38 @@
+PUT naver-news-collect-prd
+{
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+    "properties": {
+      "req_url": {
+        "type": "keyword"
+      },
+      "news-source": {
+        "type": "keyword"
+      },
+      "news-title": {
+        "type": "text"
+      },
+      "news-body": {
+        "type": "text"
+      },
+      "news-sid1_num": {
+        "type": "long"
+      },
+      "news-sid1_hangl_cate": {
+        "type": "keyword"
+      },
+      "news-sid2_num": {
+        "type": "long"
+      },
+      "news-sid2_hangl_cate": {
+        "type": "keyword"
+      },
+      "news-cllct_detail_time": {
+        "type": "date",
+        "format": ["yyyy-MM-dd HH:mm:ss"]
+      }
+    }
+  }
+}

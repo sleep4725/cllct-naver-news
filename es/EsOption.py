@@ -1,4 +1,4 @@
 class EsOption:
     
     def __init__(self) -> None:
-        self._news_index: str = ""
+        self._news_index: str = "naver-news-collect-prd"

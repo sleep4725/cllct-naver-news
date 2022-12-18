@@ -1,8 +1,10 @@
 try:
     
     import re 
+    import requests
     import unicodedata    
     from elasticsearch import Elasticsearch
+    from elasticsearch.helpers import bulk
     from concurrent.futures import ThreadPoolExecutor
     import concurrent.futures as ConcurrentFutures
     from selenium.webdriver.chrome.webdriver import WebDriver
@@ -13,10 +15,13 @@ except ImportError as error:
     print(error)
 
 try:
+    
     from engine.ChromeDriver import ChromeDriver
     from es.EsClient import EsClient
+    from es.EsOption import EsOption
     from cllct.CllctOfNews import CllctOfNews
     from model.eco.ModelOfEco import ModelOfEco
+    from common.CommonURL import CommonURL
 except ImportError as error:
     print(error)
 
@@ -29,7 +34,14 @@ def bulk_indexing(action: list[dict]):
     :param:
     :return:
     '''
-    es_clien:Elasticsearch = EsClient.get_es_client(deploy= "local")
+    es_client:Elasticsearch = EsClient.get_es_client(deploy= "local")
+    try:
+        
+        bulk(client= es_client, actions= action)
+    except:
+        print("bulk insert error")
+        exit(1)
+    
     es_client.close()
 
 def get_media_body(news_body: bs4.element.Tag)\
@@ -42,7 +54,8 @@ def get_media_body(news_body: bs4.element.Tag)\
         "div#dic_area.go_trans._article_content"
     )
     
-    news_content = str(unicodedata.normalize("NFKD",div_tag.text))\
+    #news_content = str(unicodedata.normalize("NFKD",div_tag.text))\
+    news_content= div_tag.text\
         .replace("\n", "")\
         .replace("\t", "")
     news_content_v: str = re.sub(' +', ' ', news_content)    
@@ -76,7 +89,7 @@ def get_media_source(news_source: bs4.element.Tag)\
     
     return str(img_tag.attrs["title"]).strip()
 
-def get_news_detail_information(u: str, chrome_driver: WebDriver)\
+def get_news_detail_information(u: str, chrome_driver: WebDriver, url_header: dict[str, str])\
     -> dict:
     '''
     :param
@@ -84,9 +97,13 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver)\
     :return:
     '''
     element :dict = {"req_url": u["url"]}
-    chrome_driver.get(u["url"])
-    chrome_driver.implicitly_wait(3)
-    bs_obj = BeautifulSoup(chrome_driver.page_source, "html.parser")
+    #chrome_driver.get(u["url"])
+    #chrome_driver.execute_script("window.open()")
+    #chrome_driver.implicitly_wait(3)
+    #bs_obj = BeautifulSoup(chrome_driver.page_source, "html.parser")
+    
+    response = requests.get(u["url"], headers= url_header) 
+    bs_obj = BeautifulSoup(response.text, "html.parser")
     
     newsct :bs4.element.Tag= bs_obj.select_one("div#ct.newsct")
     news_header :bs4.element.Tag= newsct.select_one("div.media_end_head.go_trans")
@@ -107,13 +124,15 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver)\
     element["news-sid2_hangl_cate"] = u["sid2_hangl_cate"]
     element["news-cllct_detail_time"] = u["detail_cllct_time"]
     
-    chrome_driver.quit()
+    #chrome_driver.quit()
      
     return element
 
 if __name__ == "__main__":
 
+    common_url = CommonURL()
     o = CllctOfNews(news_category_object= ModelOfEco) 
+    es_client_obj = EsOption()
     chrome_driver_object = ChromeDriver() 
     driver :WebDriver = chrome_driver_object.get_chrome_driver()
     
@@ -129,9 +148,26 @@ if __name__ == "__main__":
                 results = [
                             executor.submit(
                                 get_news_detail_information, 
-                                u, chrome_driver_object.get_chrome_driver() 
+                                u, driver, common_url._headers 
                             ) for u in url
                         ]
+
+                actions :list[dict] = []
+                for result_element in ConcurrentFutures.as_completed(results):
+                    element:dict = result_element.result()
+                    actions_element = {
+                        "_index": es_client_obj._news_index,
+                        "_id": 
+                            element["news-sid1_hangl_cate"] +
+                            "_" +
+                            element["news-sid2_hangl_cate"] +
+                            "_" + 
+                            element["news-source"] +
+                            "_" +
+                            element["news-title"]
+                            ,    
+                        "_source": element
+                    }
+                    actions.append(actions_element)
                 
-                for _ in ConcurrentFutures.as_completed(results):
-                    print(_.result())
+                bulk_indexing(action= actions)
