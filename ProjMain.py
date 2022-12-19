@@ -56,7 +56,6 @@ def get_media_body(news_body: bs4.element.Tag)\
         "div#dic_area.go_trans._article_content"
     )
     
-    #news_content = str(unicodedata.normalize("NFKD",div_tag.text))\
     news_content= div_tag.text\
         .replace("\n", "")\
         .replace("\t", "")
@@ -91,7 +90,7 @@ def get_media_source(news_source: bs4.element.Tag)\
     
     return str(img_tag.attrs["title"]).strip()
 
-def get_news_detail_information(u: str, chrome_driver: WebDriver, url_header: dict[str, str])\
+def get_news_detail_information(u: str, url_header: dict[str, str])\
     -> dict:
     '''
     :param
@@ -99,10 +98,6 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver, url_header: di
     :return:
     '''
     element :dict = {"req_url": u["url"]}
-    #chrome_driver.get(u["url"])
-    #chrome_driver.execute_script("window.open()")
-    #chrome_driver.implicitly_wait(3)
-    #bs_obj = BeautifulSoup(chrome_driver.page_source, "html.parser")
     
     response = requests.get(u["url"], headers= url_header) 
     bs_obj = BeautifulSoup(response.text, "html.parser")
@@ -130,6 +125,9 @@ def get_news_detail_information(u: str, chrome_driver: WebDriver, url_header: di
      
     return element
 
+## -----------------------------
+# PROJ MAIN FUNCTION
+## -----------------------------
 if __name__ == "__main__":
 
     argument = sys.argv
@@ -146,8 +144,6 @@ if __name__ == "__main__":
      
     o = CllctOfNews(news_category_object= news_category_obj) 
     es_client_obj = EsOption()
-    chrome_driver_object = ChromeDriver() 
-    driver :WebDriver = chrome_driver_object.get_chrome_driver()
     
     sid2 :dict[str, int] = o._obj._sid2
     for k, v in sid2.items():
@@ -161,7 +157,7 @@ if __name__ == "__main__":
                 results = [
                             executor.submit(
                                 get_news_detail_information, 
-                                u, driver, common_url._headers 
+                                u,common_url._headers 
                             ) for u in url
                         ]
 
