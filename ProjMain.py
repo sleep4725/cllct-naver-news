@@ -20,8 +20,14 @@ try:
     from es.EsClient import EsClient
     from es.EsOption import EsOption
     from cllct.CllctOfNews import CllctOfNews
+    
     from model.eco.ModelOfEco import ModelOfEco
     from model.pol.ModelOfPol import ModelOfPol
+    from model.cul.ModelOfCul import ModelOfCul
+    from model.sci.ModelOfSci import ModelOfSci
+    from model.soc.ModelOfSoc import ModelOfSoc
+    from model.world.ModelOfWorld import ModelOfWorld
+    
     from common.CommonURL import CommonURL
     from skeleton.Template import Template
 except ImportError as error:
@@ -217,8 +223,13 @@ if __name__ == "__main__":
     if argument[1] not in ["ModelOfEco", "ModelOfPol"]:
         print("ModelOfEco, ModelOfPol")
         exit(1)
+        
     if argument[1] == "ModelOfEco": news_category_obj = ModelOfEco
     elif argument[1] == "ModelOfPol": news_category_obj = ModelOfPol
+    elif argument[1] == "ModelOfCul": news_category_obj = ModelOfCul
+    elif argument[1] == "ModelOfSci": news_category_obj = ModelOfSci
+    elif argument[1] == "ModelOfSoc": news_category_obj = ModelOfSoc
+    elif argument[1] == "ModelOfWorld": news_category_obj = ModelOfWorld
      
     o = CllctOfNews(news_category_object= news_category_obj) 
     es_client_obj = EsOption()

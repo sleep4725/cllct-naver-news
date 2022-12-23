@@ -1,5 +1,5 @@
 '''
-[네이버 뉴스- 경제]
+[네이버 뉴스- 정치]
 @author JunHyeon.Kim
 @email sleep4725@gmail.com
 '''

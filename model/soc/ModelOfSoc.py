@@ -2,7 +2,7 @@
 :사회
 @author JunHyeon.Kim
 '''
-class ModelOfSco:
+class ModelOfSoc:
     
     def __init__(self) -> None:
         self._sid1:int = 102
