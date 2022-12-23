@@ -5,31 +5,31 @@ PUT naver-news-collect-prd
   },
   "mappings": {
     "properties": {
-      "req_url": {
+      "news_source": {
         "type": "keyword"
       },
-      "news-source": {
-        "type": "keyword"
-      },
-      "news-title": {
+      "news_title": {
         "type": "text"
       },
-      "news-body": {
+      "news_url": {
+        "type": "keyword"
+      },
+      "news_body": {
         "type": "text"
       },
-      "news-sid1_num": {
+      "news_sid1_num": {
         "type": "long"
       },
-      "news-sid1_hangl_cate": {
+      "news_sid1_hangl_cate": {
         "type": "keyword"
       },
-      "news-sid2_num": {
+      "news_sid2_num": {
         "type": "long"
       },
-      "news-sid2_hangl_cate": {
+      "news_sid2_hangl_cate": {
         "type": "keyword"
       },
-      "news-cllct_detail_time": {
+      "news_cllct_detail_time": {
         "type": "date",
         "format": ["yyyy-MM-dd HH:mm:ss"]
       }
