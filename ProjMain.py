@@ -1,5 +1,6 @@
 try:
     
+    import os 
     import sys 
     import re 
     import requests
@@ -14,6 +15,10 @@ try:
     import bs4
 except ImportError as error:
     print(error)
+
+#PROJ_ROOT_PATH :str = os.path.abspath(os.path.dirname(__file__))
+#print(PROJ_ROOT_PATH)
+#sys.path.append(PROJ_ROOT_PATH)
 
 try:
     
