@@ -1,24 +1,17 @@
 try:
     
-    import os 
     import sys 
     import re 
     import requests
-    import unicodedata    
     from elasticsearch import Elasticsearch
     from elasticsearch.helpers import bulk
     from concurrent.futures import ThreadPoolExecutor
     import concurrent.futures as ConcurrentFutures
-    from selenium.webdriver.chrome.webdriver import WebDriver
-    from selenium.webdriver.common.by import By
+    from dataclasses import asdict
     from bs4 import BeautifulSoup
     import bs4
 except ImportError as error:
     print(error)
-
-#PROJ_ROOT_PATH :str = os.path.abspath(os.path.dirname(__file__))
-#print(PROJ_ROOT_PATH)
-#sys.path.append(PROJ_ROOT_PATH)
 
 try:
     
@@ -29,6 +22,7 @@ try:
     from model.eco.ModelOfEco import ModelOfEco
     from model.pol.ModelOfPol import ModelOfPol
     from common.CommonURL import CommonURL
+    from skeleton.Template import Template
 except ImportError as error:
     print(error)
 
@@ -54,32 +48,42 @@ def bulk_indexing(action: list[dict]):
 def get_media_body(news_body: bs4.element.Tag)\
     -> str:
     '''
+    :param: news_body
+    :return:
     '''
-    div_tag :bs4.element.Tag= news_body.select_one(
-        "div#newsct_article.newsct_article._article_body" + 
-        " > " +
-        "div#dic_area.go_trans._article_content"
-    )
+    try:
+        
+        div_tag :bs4.element.Tag= news_body.select_one(
+            "div#newsct_article.newsct_article._article_body" + 
+            " > " +
+            "div#dic_area.go_trans._article_content"
+        )
     
-    news_content= div_tag.text\
-        .replace("\n", "")\
-        .replace("\t", "")
-    news_content_v: str = re.sub(' +', ' ', news_content)    
-    return news_content_v
-
+        news_content= div_tag.text\
+            .replace("\n", "")\
+            .replace("\t", "")
+        news_content_v: str = re.sub(' +', ' ', news_content)    
+        return news_content_v
+    except:
+        return ""
+    
 def get_media_title(news_title: bs4.element.Tag)\
     -> str:
     '''
     :param:
     :return:
     '''
-    span_tag: bs4.element.Tag= news_title.select_one(
-        "h2#title_area.media_end_head_headline" + 
-        " > " + 
-        "span"
-    )
+    try:
+        
+        span_tag: bs4.element.Tag= news_title.select_one(
+            "h2#title_area.media_end_head_headline" + 
+            " > " + 
+            "span"
+        )
 
-    return str(span_tag.text).strip()
+        return str(span_tag.text).strip()
+    except:
+        return ""
     
 def get_media_source(news_source: bs4.element.Tag)\
     -> str:
@@ -87,48 +91,68 @@ def get_media_source(news_source: bs4.element.Tag)\
     :param news_source:
     :return:
     '''
-    img_tag :bs4.element.Tag= news_source.select_one(
-        "a.media_end_head_top_logo" + 
-        " > " + 
-        "img"
-    )
+    try:
+        
+        img_tag :bs4.element.Tag= news_source.select_one(
+            "a.media_end_head_top_logo" + 
+            " > " + 
+            "img"
+        )
     
-    return str(img_tag.attrs["title"]).strip()
+        return str(img_tag.attrs["title"]).strip()
+    except:
+        # empty string return
+        return ""
 
-def get_news_detail_information(u: str, url_header: dict[str, str])\
+def get_news_detail_information(u: dict, url_header: dict[str, str])\
     -> dict:
     '''
     :param
     :param:
     :return:
     '''
-    element :dict = {"req_url": u["url"]}
+    element_template = Template()
+    
+    #element :dict = {"req_url": u["url"]}
+    element_template.news_url += u["url"]
     
     response = requests.get(u["url"], headers= url_header) 
-    bs_obj = BeautifulSoup(response.text, "html.parser")
     
-    newsct :bs4.element.Tag= bs_obj.select_one("div#ct.newsct")
-    news_header :bs4.element.Tag= newsct.select_one("div.media_end_head.go_trans")
-    news_source :bs4.element.Tag= news_header.select_one("div.media_end_head_top")
-    news_title :bs4.element.Tag= news_header.select_one("div.media_end_head_title")
-    news_body :bs4.element.Tag= newsct.select_one("div#contents.newsct_body")
+    if response.status_code == 200:
+        bs_obj = BeautifulSoup(response.text, "html.parser")
     
-    news_source_v :str= get_media_source(news_source= news_source) # 뉴스 출처
-    news_title_v :str= get_media_title(news_title= news_title) # 뉴스 타이틀
-    news_body_v :str= get_media_body(news_body=news_body)
+        newsct :bs4.element.Tag= bs_obj.select_one("div#ct.newsct")
+        news_header :bs4.element.Tag= newsct.select_one("div.media_end_head.go_trans")
+        news_source :bs4.element.Tag= news_header.select_one("div.media_end_head_top")
+        news_title :bs4.element.Tag= news_header.select_one("div.media_end_head_title")
+        news_body :bs4.element.Tag= newsct.select_one("div#contents.newsct_body")
     
-    element["news-source"] = news_source_v    
-    element["news-title"] = news_title_v
-    element["news-body"] = news_body_v
-    element["news-sid1_num"] = u["sid1"]
-    element["news-sid1_hangl_cate"] = u["sid1_hangl_cate"]
-    element["news-sid2_num"] = u["sid2"]
-    element["news-sid2_hangl_cate"] = u["sid2_hangl_cate"]
-    element["news-cllct_detail_time"] = u["detail_cllct_time"]
+        news_source_v :str= get_media_source(news_source= news_source) # 뉴스 출처
+        news_title_v :str= get_media_title(news_title= news_title) # 뉴스 타이틀
+        news_body_v :str= get_media_body(news_body=news_body)
+
+        element_template.news_source += news_source_v
+        element_template.news_title += news_title_v
+        element_template.news_body += news_body_v
+        element_template.news_sid1_num += u["sid1"]
+        element_template.news_sid1_hangl_cate += u["sid1_hangl_cate"]
+        element_template.news_sid2_num += u["sid2"]
+        element_template.news_sid2_hangl_cate += u["sid2_hangl_cate"]
+        element_template.news_cllct_detail_time += u["detail_cllct_time"] 
+        
+        '''
+        element["news-source"] = news_source_v    
+        element["news-title"] = news_title_v
+        element["news-body"] = news_body_v
+        element["news-sid1_num"] = u["sid1"]
+        element["news-sid1_hangl_cate"] = u["sid1_hangl_cate"]
+        element["news-sid2_num"] = u["sid2"]
+        element["news-sid2_hangl_cate"] = u["sid2_hangl_cate"]
+        element["news-cllct_detail_time"] = u["detail_cllct_time"]
+        '''
+        return asdict(element_template)
     
-    #chrome_driver.quit()
-     
-    return element
+    
 
 ## -----------------------------
 # PROJ MAIN FUNCTION
@@ -172,13 +196,13 @@ if __name__ == "__main__":
                     actions_element = {
                         "_index": es_client_obj._news_index,
                         "_id": 
-                            element["news-sid1_hangl_cate"] +
+                            element["news_sid1_hangl_cate"] +
                             "_" +
-                            element["news-sid2_hangl_cate"] +
+                            element["news_sid2_hangl_cate"] +
                             "_" + 
-                            element["news-source"] +
+                            element["news_source"] +
                             "_" +
-                            element["news-title"]
+                            element["news_title"]
                             ,    
                         "_source": element
                     }
