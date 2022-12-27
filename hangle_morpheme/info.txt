@@ -1,0 +1,2 @@
+(XPN)+NNG+(XSN) :  
+    비과학적(비/XPN+과학/NNG+적/XSN),   신제품(신/XPN+제품/NNG), 책들(책/NNG+들/XSN )

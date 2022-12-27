@@ -34,8 +34,8 @@ with DAG (
     , tags = ["Teddy", "NaverNews", "Economics"]
 ) as dag:
     run_script= "{py_interpreter} {py_file} {news_category}".format(
-        py_interpreter='/opt/homebrew/bin/python3.10'
-        ,py_file='/Users/kimjunhyeon/tedy-playground-01/toy-project/cllct-naver-news/ProjMain.py'
+        py_interpreter='python3.10'
+        ,py_file='/Users/kimjunhyeon/teddy-toy-proj/news/cllct-naver-news/ProjMain.py'
         ,news_category='ModelOfEco'
     )
     naver_news_eco= BashOperator(
