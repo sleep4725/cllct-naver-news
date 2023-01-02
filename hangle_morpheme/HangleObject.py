@@ -1,5 +1,16 @@
+import os
+import sys
+PROJ_ROOT_PATH :str= os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+sys.path.append(PROJ_ROOT_PATH)
+
 import mecab
 
+try:
+    
+    from util.Regex import Regex
+except ImportError as err:
+    print(err)
+    exit(1)
 '''
 @author JunHyeon.Kim
 @date 20221224
@@ -13,40 +24,150 @@ class WordExtraction:
         :param text:
         :return:
         '''
-        m_obj.pos(text)
-    
+        response = m_obj.pos(text)
+        print(response)
+        
     @classmethod 
-    def get_nng_from_xpn(cls, index: int, response: list[tuple]):
+    def get_compound_nng_from_xpn(cls, index: int, response: list[tuple])\
+            -> tuple:
         '''
-        '''
-        XPN :list[list]= [["XPN", "NNG"], ["XPN", "XR"]]
-
-        for x in XPN:
-            ''''''
-            length_v :int= len(x)
-            back_position :int= index + length_v 
-            if back_position > len(response): pass
-            [e for e in response[index: index+length_v]]
-     
-     
-    @classmethod
-    def get_nng_add_nng(cls, index: int, response: list[tuple])\
-            -> bool:
-        '''
-        파생명사] 명사(NNG)-접미사(XSN/SN)
+        :param index:
         :param response:
         :return:
         '''
-        jump :int= index + 1
-        result_jump :int= 0
-        while True:
-            if jump > len(response) -1: break
-            else:
-                if response[jump][1] == "NNG":
-                    result_jump += 1
-                    jump += 1
+        XPN :dict[int, list]={
+                            2: [["XPN", "NNG"], 
+                                ["XPN", "XR"]]
+                            ,4: [["XPN", "NNG", "NNG", "XSN"], 
+                                 ["XPN", "NNG", "NNB", "XSN"],
+                                 ["XPN", "NR", "NNB", "XSN"],
+                                 ["XPN", "SN", "NNB", "XSN"]]
+                            ,5: [["XPN", "SN", "NNB", "NNG", "XSN"]]
+                        }
+        
+        next_movement :int= 1
+        result_movement :int= 1
+        nn_compound_hangl :str= ""
+        
+        for length_v in XPN.keys():
+            for hangle_tag_v in XPN[length_v]:
+            
+                back_position :int= index + length_v 
+                if back_position > len(response): 
+                    """이동하려는 위치가 전체 사이즈를 벗어나는 경우"""
+                    pass
                 else:
-                    break 
+                    hangl_str :str= " ".join([e[1] for e in response[index: index+length_v]])
+                    xpn_str :str= " ".join(hangle_tag_v)
+
+                    if xpn_str == hangl_str:
+                        nn_compound_hangl += "".join([e[0] for e in response[index: index+length_v]])                    
+                        if index + length_v + next_movement < len(response):
+                            hangl_tag :str= response[index + length_v + next_movement][1]  
+
+                            if hangl_tag == "XSN":
+                                nn_compound_hangl = nn_compound_hangl + response[index + length_v + next_movement][0]
+                                result_movement = length_v + next_movement                                
+                                break
+                            else: 
+                                result_movement = length_v
+                                break
+                        else: 
+                            pass
+                    else: 
+                        pass
+        
+        return nn_compound_hangl, result_movement
+    
+    @classmethod 
+    def get_compound_nng_from_nnp(cls, index: int, response: list[tuple])\
+            -> tuple:
+        '''
+        '''
+        next_movement :int= 1
+        tmp_movement :int= index + next_movement 
+        
+        result_movement :int= 0
+        nn_compound_hangl :str= ""
+        
+        while True:
+            if tmp_movement > len(response): 
+                break
+            if response[tmp_movement][1] == "NNG":
+                nn_compound_hangl += response[tmp_movement][0]
+                tmp_movement += next_movement
+                result_movement += 1
+            else:
+                # response[tmp_movement + next_movement][1] != "NNG": 
+                result_movement += 1
+                break
+        
+        return nn_compound_hangl, result_movement  
+    
+    @classmethod
+    def get_compound_nng_from_nng(cls, index: int, response: list[tuple])\
+            -> tuple:
+        '''
+        NNG + NNG + VV + ETN : 불우이웃돕기(불우/NNG+이웃/NNG+돕/VV+기/ETN)
+        
+        NNG + VV + ETN : 글쓰기(글/NNG+쓰/VV+기/ETN)
+        NNG + MM + NNG : 국내총생산(국내/NNG+총/MM+생산/NNG)
+        NNG + (VV + ETM) + NNG : 눈코뜰새(눈코/NNG+뜨/VV+ㄹ/ETM+새/NNG)
+        
+        :param response:
+        :return:
+        '''
+        NNG :dict[int, list]={
+                            3: [["NNG", "VV", "ETN"],
+                                ["NNG", "MM", "NNG"]]
+                            ,4: [["NNG", "NNG", "VV", "ETN"]], 
+                        }
+        
+        next_movement :int= 1
+        tmp_movement :int= index + next_movement 
+        
+        result_movement :int= 0
+        nn_compound_hangl :str= ""
+        
+        is_true :bool= False
+        
+        for length_v in NNG.keys():
+            for hangle_tag_v in NNG[length_v]:
+            
+                back_position :int= index + length_v 
+                if back_position > len(response): 
+                    """이동하려는 위치가 전체 사이즈를 벗어나는 경우
+                    """
+                    pass
+                else:
+                    """이동하려는 위치가 전체 사이즈를 벗어나지 않는 경우
+                    """
+                    hangl_str :str= " ".join([e[1] for e in response[index: back_position]])
+                    xpn_str :str= " ".join(hangle_tag_v)
+
+                    if xpn_str == hangl_str:
+                        nn_compound_hangl += "".join([e[0] for e in response[index + 1: back_position]])                    
+                        is_true = True
+                        result_movement += length_v
+                        print("----------------------------------------")
+                        break
+                    else: 
+                        pass
+        
+        if not is_true:
+            while True:
+                if tmp_movement >= len(response): 
+                    break
+                if response[tmp_movement][1] == "NNG" and len(response[tmp_movement][0]) > 1:
+                    nn_compound_hangl += response[tmp_movement][0]
+                    tmp_movement += next_movement
+                    result_movement += 1
+                else:
+                    # response[tmp_movement + next_movement][1] != "NNG": 
+                    result_movement += 1
+                    break
+        
+        return nn_compound_hangl, result_movement 
     
     @classmethod 
     def get_compound_num_xpn(cls, index: int, response: list[tuple]):
@@ -66,20 +187,6 @@ class WordExtraction:
         :param response:
         :return: 
         '''
-        NNG_TAG_LIST :list[str]= ["XPN", "XPN NNG"]
-        XR_TAG_LIST :list[str]= ["XPN"]
-        NNB_TAG_LIST :list[str]= ["XPN NNG"]
-        
-        mov_index :int= index+1
-        compound_char :str= "XPN"
-        
-        if response[mov_index][1] == "NNG" and compound_char in NNG_TAG_LIST:
-            compound_char = compound_char + f" {response[mov_index][1]}" 
-            mov_index += 1
-        elif response[mov_index][1] == "XR" and compound_char in XR_TAG_LIST:
-            compound_char = compound_char + f" {response[mov_index][1]}" 
-            mov_index += 1 
-        
     
     @classmethod
     def ex_compound_word(cls, m_obj: mecab.MeCab, text: str):
@@ -99,16 +206,36 @@ class WordExtraction:
             if mov_index == lst_index: break 
             print (mov_index, response[mov_index])
             
-            if response[mov_index][1] == "NNG":
-                is_ok :bool= WordExtraction.get_nng_add_nng(index=mov_index, response=response)
-            elif response[mov_index][1] == "XPN":
+            if response[mov_index][1] == "XPN":
                 ''' XPN : 체언접두사
                 '''
-                
+                nn_compound_hangl, move = WordExtraction.get_compound_nng_from_xpn(index= mov_index, response= response)
+                result_compound_word.append(str(nn_compound_hangl).strip())
+                mov_index += move
+            elif response[mov_index][1] == "NNG" and len(response[mov_index][0]) > 1:
+                ''' NNG
+                '''
+                nng_word :str= response[mov_index][0]
+                nn_compound_hangl, move = WordExtraction.get_compound_nng_from_nng(index= mov_index, response= response)
+                nng_word += nn_compound_hangl
+                result_compound_word.append(str(nng_word).strip())
+                if move == 0:
+                    mov_index += 1
+                else:
+                    mov_index += move
+            elif response[mov_index][1] == "NNP":
+                nnp_word :str= response[mov_index][0]
+                nn_compound_hangl, move = WordExtraction.get_compound_nng_from_nng(index= mov_index, response= response)
+                nnp_word += nn_compound_hangl
+                result_compound_word.append(str(nnp_word).strip())
+                if move == 0:
+                    mov_index += 1
+                else:
+                    mov_index += move 
             else:
-                mov_index += 1
+                mov_index += 1 
         
-        compound_word_list :list[str]= list(set(result_compound_word))
+        compound_word_list :list[str]= list(set([w for w in list(set(result_compound_word)) if len(w) > 2]))
         print(compound_word_list)
 
 class HangleObject:
@@ -125,19 +252,15 @@ class HangleObject:
         
 if __name__ == "__main__":
     o = HangleObject.get_hangle_client()
-    t = '''[서울=뉴시스]윤정민 기자 = 지난 상반기에 법원 허가가 필요한 '통신사실확인자료' 제공 건수와 '통신제한조치' 협조 건수는 지난해 같은 기간에 비해 늘었지만 검·경찰, 국정원 등 수사기관에 제공된 '통신자료' 건수는 줄어든 것으로 나타났다.
-
-23일 과학기술정보통신부는 78개 전기통신사업자(기간통신 50개사, 부가통신 28개사)가 제출한 '22년 상반기 통신자료 및 통신사실확인자료 제공, 통신제한조치 협조 현황'을 집계해 발표했다.
-
-'통신자료'는 이용자 성명, 주민등록번호, 주소, 가입 및 해지일자, 전화번호, 아이디(ID) 등 통신서비스 이용자의 기본 인적사항이다. '통신사실확인자료'는 통화 내용이 아닌 상대방 전화번호, 통화 일시 및 통화시간 등의 통화사실과, 인터넷 로그기록·접속지 자료(IP Address) 및 발신기지국 위치추적자료 등이다.
-
-이용자 인적사항인 통신자료는 수사기관 등이 보이스피싱이나 납치 피해자 확인 등 신속한 범죄 수사를 위해 전기통신사업법에 따라 공문으로 요청해 전기통신사업자로부터 취득되는 자료다.
-
-통신자료가 지난 상반기 수사기관에 제출된 건수는 전화번호 수 기준 212만6건으로 전년 동기 대비 17.2%(43만9433건) 줄었다. 이중 검찰과 경찰이 받아간 자료는 각각 55만9774건, 149만4927건으로 총 205만4701건이다.
-
-하지만 법원 허가가 필요한 통신사실확인자료와 통신제한조치 건수는 증가했다.
-
-상대방 전화번호 등 통신사실확인자료는 통신비밀보호법이 정한 요건 및 절차에 따라 해당 자료가 필요한 수사기관 등이 법원의 허가를 받아야만 전기통신사업자로부터 취득할 수 있다.
-
-통신사실확인자료가 지난 상반기 수사기관에 제출된 건수는 전화번호 수 기준으로 30만2015건으로 전년 동기 대비 25.3%(6만1032건) 늘었다. 이중 검찰과 경찰이 받아간 자료는 각각 4만4871건, 25만4421건으로 총 29만9292건이다.'''
+    t = '''2023년 새해가 밝았지만 신종 코로나바이러스 감염증(코로나19)과의 전쟁은 한동안 지속될 것이라는 전망이 나오고 있다.
+ 
+오미크론의 최신 하위변이 중 하나인 ‘XBB.1.5’가 미국에서 맹위를 떨치고 있는 등 XXB 하위 변이로 인해 새해에도 세계 각국이 코로나19 감염자 확산에 시달릴 수 있다고 과학계는 경고했다.
+ 
+특히 중국이 최근 코로나19 관련 방역 규제를 대폭 완화하면서 올해에는 변이가 더 널리 퍼지고 새로 지배종이 될 가능성이 있는 신규 변이까지 출연할지도 모른다는 우려까지 나오면서 이 같은 우려는 더욱 커지고 있다.
+ 
+지난달 31일(현지시간) 미국 경제 방송 CNBC 등에 따르면 미국 질병통제예방센터(CDC)는 지난 일주일간 XBB.1.5 감염에 의한 발병률이 이전보다 약 2배 늘었다고 밝혔다.
+ 
+XBB.1.5 감염은 미국 내 전체 신규 감염 사례의 41％ 가량을 차지해 우세종으로 가는 길목에 접어든 것으로 관측된다.
+ 
+XBB는 대표적인 오미크론 하위변이로, 작년 8월 인도에서 처음 발견된 뒤 작년 10월 싱가포르로 퍼졌다. 이후 싱가포르에서 코로나19 확진자가 전달 대비 약 3배 증가할 정도로 강한 전파력이 확인됐다.'''
     WordExtraction.ex_compound_word(o, t)
