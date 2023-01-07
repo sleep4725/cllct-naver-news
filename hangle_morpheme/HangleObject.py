@@ -189,7 +189,8 @@ class WordExtraction:
         '''
     
     @classmethod
-    def ex_compound_word(cls, m_obj: Mecab, text: str):
+    def ex_compound_word(cls, m_obj: Mecab, text: str)\
+            -> list[str]:
         '''
         :param m_obj:
         :param text:
@@ -236,8 +237,8 @@ class WordExtraction:
                 mov_index += 1 
         
         compound_word_list :list[str]= list(set([w for w in list(set(result_compound_word)) if len(w) > 2]))
-        print(compound_word_list)
-
+        return compound_word_list
+        
 class HangleObject:
     
     @classmethod 
@@ -249,18 +250,3 @@ class HangleObject:
         '''
         m_obj = Mecab()
         return m_obj
-        
-if __name__ == "__main__":
-    o = HangleObject.get_hangle_client()
-    t = '''2023년 새해가 밝았지만 신종 코로나바이러스 감염증(코로나19)과의 전쟁은 한동안 지속될 것이라는 전망이 나오고 있다.
- 
-오미크론의 최신 하위변이 중 하나인 ‘XBB.1.5’가 미국에서 맹위를 떨치고 있는 등 XXB 하위 변이로 인해 새해에도 세계 각국이 코로나19 감염자 확산에 시달릴 수 있다고 과학계는 경고했다.
- 
-특히 중국이 최근 코로나19 관련 방역 규제를 대폭 완화하면서 올해에는 변이가 더 널리 퍼지고 새로 지배종이 될 가능성이 있는 신규 변이까지 출연할지도 모른다는 우려까지 나오면서 이 같은 우려는 더욱 커지고 있다.
- 
-지난달 31일(현지시간) 미국 경제 방송 CNBC 등에 따르면 미국 질병통제예방센터(CDC)는 지난 일주일간 XBB.1.5 감염에 의한 발병률이 이전보다 약 2배 늘었다고 밝혔다.
- 
-XBB.1.5 감염은 미국 내 전체 신규 감염 사례의 41％ 가량을 차지해 우세종으로 가는 길목에 접어든 것으로 관측된다.
- 
-XBB는 대표적인 오미크론 하위변이로, 작년 8월 인도에서 처음 발견된 뒤 작년 10월 싱가포르로 퍼졌다. 이후 싱가포르에서 코로나19 확진자가 전달 대비 약 3배 증가할 정도로 강한 전파력이 확인됐다.'''
-    WordExtraction.ex_compound_word(o, t)

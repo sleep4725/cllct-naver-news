@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 """
 @author JunHyeon.Kim
@@ -16,3 +16,4 @@ class Template:
     news_sid2_num: int = 0 # 뉴스 카테고리-2
     news_sid2_hangl_cate: str = "" # 뉴스 카테고리-2 한글 명
     news_cllct_detail_time: str = ""
+    news_compound_words: list[str] = field(default_factory=list) 

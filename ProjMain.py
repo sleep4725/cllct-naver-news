@@ -11,6 +11,7 @@ try:
     from dataclasses import asdict
     from bs4 import BeautifulSoup
     import bs4
+    from konlpy.tag import Mecab
 except ImportError as error:
     print(error)
 
@@ -27,7 +28,7 @@ try:
     from model.sci.ModelOfSci import ModelOfSci
     from model.soc.ModelOfSoc import ModelOfSoc
     from model.world.ModelOfWorld import ModelOfWorld
-    
+    from hangle_morpheme.HangleObject import HangleObject, WordExtraction 
     from common.CommonURL import CommonURL
     from skeleton.Template import Template
 except ImportError as error:
@@ -158,7 +159,7 @@ def get_news_body_tag(newsct: bs4.element.Tag)\
     except:
         return None, False
     
-def get_news_detail_information(u: dict, url_header: dict[str, str])\
+def get_news_detail_information(u: dict, mecab_obj: Mecab, url_header: dict[str, str])\
     -> dict:
     '''
     :param
@@ -194,6 +195,8 @@ def get_news_detail_information(u: dict, url_header: dict[str, str])\
             if is_check_news_body:
                 news_body_v :str= get_media_body(news_body=news_body)
                 element_template.news_body += news_body_v
+                if news_body_v:
+                    element_template.news_compound_words.extend(WordExtraction.ex_compound_word(mecab_obj, news_body_v))
             else:
                 ''' is_check_news_body == False 
                 '''
@@ -230,7 +233,9 @@ if __name__ == "__main__":
     elif argument[1] == "ModelOfSci": news_category_obj = ModelOfSci
     elif argument[1] == "ModelOfSoc": news_category_obj = ModelOfSoc
     elif argument[1] == "ModelOfWorld": news_category_obj = ModelOfWorld
-     
+    
+    mecab_obj = HangleObject.get_hangle_client() 
+    
     o = CllctOfNews(news_category_object= news_category_obj) 
     es_client_obj = EsOption()
     
@@ -246,7 +251,9 @@ if __name__ == "__main__":
                 results = [
                             executor.submit(
                                 get_news_detail_information, 
-                                u,common_url._headers 
+                                u,
+                                mecab_obj,
+                                common_url._headers 
                             ) for u in url
                         ]
 
