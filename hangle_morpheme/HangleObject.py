@@ -3,7 +3,7 @@ import sys
 PROJ_ROOT_PATH :str= os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(PROJ_ROOT_PATH)
 
-import mecab
+from konlpy.tag import Mecab
 
 try:
     
@@ -18,7 +18,7 @@ except ImportError as err:
 class WordExtraction:
     
     @classmethod 
-    def sample(cls, m_obj: mecab.MeCab, text: str):
+    def sample(cls, m_obj: Mecab, text: str):
         '''
         :param m_obj:
         :param text:
@@ -189,7 +189,7 @@ class WordExtraction:
         '''
     
     @classmethod
-    def ex_compound_word(cls, m_obj: mecab.MeCab, text: str):
+    def ex_compound_word(cls, m_obj: Mecab, text: str):
         '''
         :param m_obj:
         :param text:
@@ -242,12 +242,12 @@ class HangleObject:
     
     @classmethod 
     def get_hangle_client(cls)\
-            ->mecab.MeCab:
+            -> Mecab:
         '''
         :param:
         :return:
         '''
-        m_obj = mecab.MeCab()
+        m_obj = Mecab()
         return m_obj
         
 if __name__ == "__main__":
